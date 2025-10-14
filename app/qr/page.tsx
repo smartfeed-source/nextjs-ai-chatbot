@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
+import * as QRCode from "qrcode";
 
 export default function Page() {
   const [token, setToken] = useState<string>("");
