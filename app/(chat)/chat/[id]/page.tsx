@@ -19,16 +19,17 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("user_token")?.value;
+  const isQrLoggedIn = token && getQrStatus(token) === "login";
+  if (!isQrLoggedIn) {
+    redirect(`/qr?redirect=${encodeURIComponent(`/chat/${id}`)}`);
+  }
 
+  // Ensure we have a guest session for API access
+  const session = await auth();
   if (!session) {
-    // Allow viewing only when QR login present; else redirect to home
-    const cookieStore = await cookies();
-    const token = cookieStore.get("user_token")?.value;
-    const isQrLoggedIn = token && getQrStatus(token) === "login";
-    if (!isQrLoggedIn) {
-      redirect("/");
-    }
+    redirect(`/api/auth/guest?redirectUrl=${encodeURIComponent(`/chat/${id}`)}`);
   }
 
   if (chat.visibility === "private") {
@@ -48,10 +49,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   const uiMessages = convertToUIMessages(messagesFromDb);
 
-  const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
-  const qrToken = cookieStore.get("user_token")?.value;
-  const isQrLoggedIn = qrToken && getQrStatus(qrToken) === "login";
 
   if (!chatModelFromCookie) {
     return (

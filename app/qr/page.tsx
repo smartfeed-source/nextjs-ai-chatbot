@@ -30,20 +30,18 @@ export default function Page() {
   }, [token]);
 
   useEffect(() => {
-    // Poll status and close the popup when login is confirmed
+    // Poll status and redirect back when login is confirmed
+    const params = new URLSearchParams(window.location.search);
+    const redirectTo = params.get("redirect") || "/";
     const poll = async () => {
       const res = await fetch("/api/qr/status", { cache: "no-store" });
       const json = (await res.json()) as { status: "pending" | "login" };
       if (json.status === "login") {
         if (intervalRef.current) window.clearInterval(intervalRef.current);
         intervalRef.current = null;
-        try {
-          if (window.opener) {
-            window.opener.location.reload();
-          }
-        } finally {
-          window.close();
-        }
+        window.location.href = `/api/auth/guest?redirectUrl=${encodeURIComponent(
+          redirectTo
+        )}`;
       }
     };
     intervalRef.current = window.setInterval(poll, 1500);
@@ -64,7 +62,7 @@ export default function Page() {
         ) : (
           <div className="h-[240px] w-[240px] animate-pulse rounded-lg bg-muted" />
         )}
-        <p className="text-sm text-muted-foreground">Open the iOS app and scan this code.</p>
+        <p className="text-sm text-muted-foreground">Open the iOS app and scan this code to continue.</p>
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { generateUUID } from "@/lib/utils";
-import { QrGate } from "@/components/qr-gate";
 import { getQrStatus, initQrToken } from "@/lib/qr-store";
 import { auth } from "../(auth)/auth";
 
@@ -19,27 +18,29 @@ export default async function Page() {
     isQrLoggedIn = status === "login";
   }
 
-  // If no token, initialize one so client can open QR
-  if (!existingToken) {
-    const newToken = generateUUID();
-    initQrToken(newToken);
-    // Set a non HttpOnly cookie so client can read/open QR easily
-    // Next.js server component cookie write via headers not available here;
-    // the GET /api/qr/status will set the cookie on first gate interaction.
+  // If no token or not logged in via QR, redirect to QR page
+  if (!existingToken || !isQrLoggedIn) {
+    // Initialize a server-side record so /qr shows a code immediately
+    if (!existingToken) {
+      initQrToken(generateUUID());
+    }
+    redirect(`/qr?redirect=${encodeURIComponent("/")}`);
   }
 
-  // Fallback to existing auth (guest/regular) if present
+  // Ensure there is a session (guest) to enable chat APIs
   const session = await auth();
+  if (!session) {
+    redirect(`/api/auth/guest?redirectUrl=${encodeURIComponent("/")}`);
+  }
 
   const id = generateUUID();
   const modelIdFromCookie = cookieStore.get("chat-model");
 
-  const isReadOnly = !(isQrLoggedIn || !!session?.user);
+  const isReadOnly = false;
 
   if (!modelIdFromCookie) {
     return (
       <>
-        {!isQrLoggedIn && <QrGate />}
         <Chat
           autoResume={false}
           id={id}
@@ -56,7 +57,6 @@ export default async function Page() {
 
   return (
     <>
-      {!isQrLoggedIn && <QrGate />}
       <Chat
         autoResume={false}
         id={id}
