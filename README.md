@@ -1,3 +1,16 @@
+## QR Scan Login (Token-based)
+
+This app now supports a simple QR scan to login without a user database:
+
+- When a visitor opens the site, a `user_token` cookie is created and a QR can be opened from the chat page.
+- Scan the QR in your iOS app and POST `{ token }` to `POST /api/qr/confirm`.
+- The browser polls `GET /api/qr/status` until it returns `{ status: "login" }`, then the page refreshes and proceeds.
+
+Endpoints:
+
+- `GET /api/qr/status?token=...` — initializes/returns token and status
+- `POST /api/qr/confirm` — body: `{ token: string }` to mark as "login"
+
 <a href="https://chat.vercel.ai/">
   <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
   <h1 align="center">Chat SDK</h1>
