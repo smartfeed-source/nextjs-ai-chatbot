@@ -32,11 +32,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   }
 
   if (chat.visibility === "private") {
-    if (!session.user) {
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) {
       return notFound();
     }
 
-    if (session.user.id !== chat.userId) {
+    if (sessionUserId !== chat.userId) {
       return notFound();
     }
   }
