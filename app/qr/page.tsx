@@ -33,18 +33,19 @@ export default function Page() {
     // Poll status and redirect back when login is confirmed
     const params = new URLSearchParams(window.location.search);
     const redirectTo = params.get("redirect") || "/";
+    let syncingSession = false;
     const poll = async () => {
       const res = await fetch("/api/qr/status", { cache: "no-store" });
       const json = (await res.json()) as { status: "pending" | "login" };
-      if (json.status === "login") {
-        if (intervalRef.current) window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (json.status === "login" && !syncingSession) {
+        syncingSession = true;
+        // Create a guest session then go back
         window.location.href = `/api/auth/guest?redirectUrl=${encodeURIComponent(
           redirectTo
         )}`;
       }
     };
-    intervalRef.current = window.setInterval(poll, 1500);
+    intervalRef.current = window.setInterval(poll, 1000);
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
       intervalRef.current = null;

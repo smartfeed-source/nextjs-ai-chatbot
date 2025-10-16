@@ -8,8 +8,9 @@ import { getQrStatus, initQrToken } from "@/lib/qr-store";
 import { auth } from "../(auth)/auth";
 
 export default async function Page() {
-  // Check QR cookie-based login first
+  // Check session and QR cookie-based login
   const cookieStore = await cookies();
+  const session = await auth();
   const existingToken = cookieStore.get("user_token")?.value;
 
   let isQrLoggedIn = false;
@@ -18,8 +19,8 @@ export default async function Page() {
     isQrLoggedIn = status === "login";
   }
 
-  // If no token or not logged in via QR, redirect to QR page
-  if (!existingToken || !isQrLoggedIn) {
+  // If neither session nor QR-login, redirect to QR page
+  if (!session?.user && !isQrLoggedIn) {
     // Initialize a server-side record so /qr shows a code immediately
     if (!existingToken) {
       initQrToken(generateUUID());
@@ -27,9 +28,8 @@ export default async function Page() {
     redirect(`/qr?redirect=${encodeURIComponent("/")}`);
   }
 
-  // Ensure there is a session (guest) to enable chat APIs
-  const session = await auth();
-  if (!session) {
+  // If QR-login exists but no session, create a guest session and come back
+  if (!session?.user && isQrLoggedIn) {
     redirect(`/api/auth/guest?redirectUrl=${encodeURIComponent("/")}`);
   }
 
