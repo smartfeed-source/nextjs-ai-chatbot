@@ -1,9 +1,9 @@
-import { gateway } from "@ai-sdk/gateway";
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { isTestEnvironment } from "../constants";
 
 export const myProvider = isTestEnvironment
@@ -25,12 +25,42 @@ export const myProvider = isTestEnvironment
     })()
   : customProvider({
       languageModels: {
-        "chat-model": gateway.languageModel("xai/grok-2-vision-1212"),
+        // OpenRouter via OpenAI-compatible provider
+        // Set OPENROUTER_API_KEY, OPENROUTER_SITE_URL, OPENROUTER_APP_NAME
+        "chat-model": openai({
+          baseURL: "https://openrouter.ai/api/v1",
+          apiKey: process.env.OPENROUTER_API_KEY,
+          headers: {
+            "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
+            "X-Title": process.env.OPENROUTER_APP_NAME ?? "Next.js Chatbot",
+          },
+        }).languageModel("openai/gpt-5-chat"),
         "chat-model-reasoning": wrapLanguageModel({
-          model: gateway.languageModel("xai/grok-3-mini"),
+          model: openai({
+            baseURL: "https://openrouter.ai/api/v1",
+            apiKey: process.env.OPENROUTER_API_KEY,
+            headers: {
+              "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
+              "X-Title": process.env.OPENROUTER_APP_NAME ?? "Next.js Chatbot",
+            },
+          }).languageModel("google/gemini-2.5-pro"),
           middleware: extractReasoningMiddleware({ tagName: "think" }),
         }),
-        "title-model": gateway.languageModel("xai/grok-2-1212"),
-        "artifact-model": gateway.languageModel("xai/grok-2-1212"),
+        "title-model": openai({
+          baseURL: "https://openrouter.ai/api/v1",
+          apiKey: process.env.OPENROUTER_API_KEY,
+          headers: {
+            "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
+            "X-Title": process.env.OPENROUTER_APP_NAME ?? "Next.js Chatbot",
+          },
+        }).languageModel("openai/gpt-4o-mini"),
+        "artifact-model": openai({
+          baseURL: "https://openrouter.ai/api/v1",
+          apiKey: process.env.OPENROUTER_API_KEY,
+          headers: {
+            "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
+            "X-Title": process.env.OPENROUTER_APP_NAME ?? "Next.js Chatbot",
+          },
+        }).languageModel("openai/gpt-4o-mini"),
       },
     });

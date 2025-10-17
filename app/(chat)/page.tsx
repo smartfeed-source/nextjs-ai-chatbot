@@ -19,8 +19,8 @@ export default async function Page() {
     isQrLoggedIn = status === "login";
   }
 
-  // If neither session nor QR-login, redirect to QR page
-  if (!session?.user && !isQrLoggedIn) {
+  // Require QR-login regardless of existing session
+  if (!isQrLoggedIn) {
     // Initialize a server-side record so /qr shows a code immediately
     if (!existingToken) {
       initQrToken(generateUUID());
@@ -48,7 +48,6 @@ export default async function Page() {
           initialMessages={[]}
           initialVisibilityType="private"
           isReadonly={isReadOnly}
-          key={id}
         />
         <DataStreamHandler />
       </>
@@ -64,7 +63,6 @@ export default async function Page() {
         initialMessages={[]}
         initialVisibilityType="private"
         isReadonly={isReadOnly}
-        key={id}
       />
       <DataStreamHandler />
     </>
