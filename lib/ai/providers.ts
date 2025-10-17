@@ -36,17 +36,17 @@ export const myProvider = isTestEnvironment
       return customProvider({
         languageModels: {
           // Chat model
-          "chat-model": openrouter.chat("openai/gpt-5-chat"),
+          "chat-model": openrouter.languageModel("openai/gpt-5-chat"),
 
           // Reasoning-capable model (example slug; ensure availability on OpenRouter)
           "chat-model-reasoning": wrapLanguageModel({
-            model: openrouter.chat("google/gemini-2.5-pro"),
+            model: openrouter.languageModel("google/gemini-2.5-pro"),
             middleware: extractReasoningMiddleware({ tagName: "think" }),
           }),
 
           // Utility models
-          "title-model": openrouter.chat("openai/gpt-5-chat"),
-          "artifact-model": openrouter.chat("openai/gpt-5-chat"),
+          "title-model": openrouter.languageModel("openai/gpt-5-chat"),
+          "artifact-model": openrouter.languageModel("openai/gpt-5-chat"),
         },
       });
     })();
