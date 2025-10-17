@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as QRCode from "qrcode";
+import { signIn } from "next-auth/react";
 
 export default function Page() {
   const [token, setToken] = useState<string>("");
@@ -39,10 +40,23 @@ export default function Page() {
       const json = (await res.json()) as { status: "pending" | "login" };
       if (json.status === "login" && !syncingSession) {
         syncingSession = true;
-        // Create a guest session then go back
-        window.location.href = `/api/auth/guest?redirectUrl=${encodeURIComponent(
-          redirectTo
-        )}`;
+        // Establish a guest session silently to enable API access
+        try {
+          await signIn("guest", { redirect: false });
+        } catch {
+          // ignore
+        }
+        // Navigate the opener (if present) back to the intended page and close the popup,
+        // otherwise just navigate this window. Avoids bouncing to external domains.
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.location.href = redirectTo;
+          } finally {
+            window.close();
+          }
+        } else {
+          window.location.href = redirectTo;
+        }
       }
     };
     intervalRef.current = window.setInterval(poll, 1000);

@@ -26,11 +26,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     redirect(`/qr?redirect=${encodeURIComponent(`/chat/${id}`)}`);
   }
 
-  // Ensure we have a guest session for API access
+  // Avoid forcing a guest session redirect; continue without session
   const session = await auth();
-  if (!session) {
-    redirect(`/api/auth/guest?redirectUrl=${encodeURIComponent(`/chat/${id}`)}`);
-  }
 
   if (chat.visibility === "private") {
     const sessionUserId = session?.user?.id;

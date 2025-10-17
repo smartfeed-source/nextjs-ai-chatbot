@@ -29,9 +29,7 @@ export default async function Page() {
   }
 
   // If QR-login exists but no session, create a guest session and come back
-  if (!session?.user && isQrLoggedIn) {
-    redirect(`/api/auth/guest?redirectUrl=${encodeURIComponent("/")}`);
-  }
+  // Previously: auto-create a guest session via redirect. Removed to avoid external bounces.
 
   const id = generateUUID();
   const modelIdFromCookie = cookieStore.get("chat-model");

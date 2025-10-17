@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export function QrGate({ autoRedirect = true }: { autoRedirect?: boolean }) {
   const router = useRouter();
@@ -21,8 +22,11 @@ export function QrGate({ autoRedirect = true }: { autoRedirect?: boolean }) {
           if (pollingRef.current) window.clearInterval(pollingRef.current);
           pollingRef.current = null;
           if (autoRedirect) {
-            const redirectUrl = encodeURIComponent(window.location.href);
-            window.location.href = `/api/auth/guest?redirectUrl=${redirectUrl}`;
+            // Establish a guest session silently to enable API access, then reload
+            try {
+              await signIn("guest", { redirect: false });
+            } catch {}
+            window.location.reload();
           }
           return;
         }
