@@ -178,11 +178,16 @@ export async function POST(request: Request) {
       execute: ({ writer: dataStream }) => {
         const modelMessages = convertToModelMessages(uiMessages);
         const sanitizedMessages: CoreMessage[] = modelMessages.map((message) => {
-          if (message.role === "user" && Array.isArray(message.content)) {
-            const hasNonText = message.content.some(
-              (part) => part.type !== "text"
+          if (
+            (message.role === "user" ||
+              message.role === "assistant" ||
+              message.role === "system") &&
+            Array.isArray(message.content)
+          ) {
+            const isAllText = message.content.every(
+              (part) => part.type === "text"
             );
-            if (!hasNonText) {
+            if (isAllText) {
               return {
                 ...message,
                 content: message.content
@@ -192,7 +197,7 @@ export async function POST(request: Request) {
             }
           }
           return message;
-        });
+        }) as CoreMessage[];
 
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
