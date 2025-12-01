@@ -9,13 +9,13 @@ export type ChatModel = {
 export const chatModels: ChatModel[] = [
   {
     id: "chat-model",
-    name: "Gemini 2.0 Flash",
-    description: "Fast and capable multimodal model from Google via OpenRouter",
+    name: "Gemini 3.0 Pro",
+    description: "Fully multimodal reasoning model from Google via OpenRouter",
   },
   {
     id: "chat-model-reasoning",
-    name: "Gemini 2.0 Flash Thinking",
+    name: "ChatGPT 5.1 Thinking",
     description:
-      "Reasoning model with chain-of-thought capabilities",
+      "Advanced reasoning model with thinking capabilities from OpenAI via OpenRouter",
   },
 ];
