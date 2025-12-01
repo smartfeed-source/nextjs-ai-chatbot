@@ -6,6 +6,7 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
+  type CoreMessage,
 } from "ai";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
@@ -175,10 +176,28 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        const modelMessages = convertToModelMessages(uiMessages);
+        const sanitizedMessages: CoreMessage[] = modelMessages.map((message) => {
+          if (message.role === "user" && Array.isArray(message.content)) {
+            const hasNonText = message.content.some(
+              (part) => part.type !== "text"
+            );
+            if (!hasNonText) {
+              return {
+                ...message,
+                content: message.content
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join(""),
+              };
+            }
+          }
+          return message;
+        });
+
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: convertToModelMessages(uiMessages),
+          messages: sanitizedMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools:
             selectedChatModel === "chat-model-reasoning"
