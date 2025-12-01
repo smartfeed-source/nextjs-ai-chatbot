@@ -24,10 +24,56 @@ const createProdProvider = () => {
              console.log("[OpenRouter] Request body is not a string:", init.body);
           }
 
-          if (body) {
-            // Log the OUTGOING messages structure (safely truncated)
+          if (body && body.messages && Array.isArray(body.messages)) {
+            
+            // Transformation Logic
+            body.messages = body.messages.map((msg: any) => {
+              // 1. Handle Array Content (flatten text parts) for ALL roles
+              if (Array.isArray(msg.content)) {
+                const isAllText = msg.content.every(
+                  (part: any) => part.type === "text"
+                );
+                if (isAllText) {
+                  msg.content = msg.content
+                    .map((part: any) => part.text)
+                    .join("");
+                }
+              }
+
+              // 2. Handle Tool Messages: Ensure content is a string (not an array)
+              // Vercel AI SDK might treat tool result content as array if multimodal, 
+              // but OpenAI/OpenRouter usually expects string for tool role.
+              if (msg.role === "tool" && Array.isArray(msg.content)) {
+                 const isAllText = msg.content.every(
+                  (part: any) => part.type === "text"
+                );
+                 if (isAllText) {
+                    msg.content = msg.content.map((part: any) => part.text).join("");
+                 } else {
+                    // Fallback for non-text tool content? 
+                    // Usually tool results are text (JSON). 
+                    // If there's an image, it's tricky, but for now assume text.
+                    msg.content = JSON.stringify(msg.content);
+                 }
+              }
+
+              // 3. Ensure Assistant messages with tool_calls have content (some providers require it)
+              if (msg.role === "assistant" && msg.tool_calls && (msg.content === null || msg.content === undefined)) {
+                // Some providers fail if content is null. Set to empty string or leave as is depending on strictness.
+                // OpenRouter/Gemini often prefers existing content field.
+                // We'll leave it as null if it works, but if logs show error "content required", we set it to "".
+                // msg.content = ""; 
+              }
+              
+              return msg;
+            });
+            
+            // Update the body string
+            init.body = JSON.stringify(body);
+
+            // Log the OUTGOING messages payload (safely truncated) AFTER transformation
              console.log(
-              "[OpenRouter] Outgoing Messages Payload:",
+              "[OpenRouter] Outgoing Messages Payload (Optimized):",
               JSON.stringify(body.messages, (key, value) => {
                  if (key === "content" && typeof value === "string" && value.length > 100) {
                    return value.substring(0, 100) + "... (truncated)";
@@ -35,27 +81,6 @@ const createProdProvider = () => {
                  return value;
               }, 2)
             );
-
-            if (body.messages && Array.isArray(body.messages)) {
-              body.messages = body.messages.map((msg: any) => {
-                if (Array.isArray(msg.content)) {
-                  const isAllText = msg.content.every(
-                    (part: any) => part.type === "text"
-                  );
-                  if (isAllText) {
-                    return {
-                      ...msg,
-                      content: msg.content
-                        .map((part: any) => part.text)
-                        .join(""),
-                    };
-                  }
-                }
-                return msg;
-              });
-              init.body = JSON.stringify(body);
-               console.log("[OpenRouter] Transformed body successfully.");
-            }
           }
         }
       } catch (e) {
