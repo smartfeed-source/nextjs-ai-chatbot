@@ -243,7 +243,7 @@ export async function POST(request: Request) {
 
         dataStream.merge(
           result.toUIMessageStream({
-            sendReasoning: true,
+            sendReasoning: selectedChatModel === "chat-model-reasoning",
           })
         );
       },

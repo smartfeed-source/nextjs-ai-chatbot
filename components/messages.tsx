@@ -2,7 +2,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
 import { AnimatePresence } from "framer-motion";
 import { ArrowDownIcon } from "lucide-react";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
@@ -44,6 +44,46 @@ function PureMessages({
   });
 
   useDataStream();
+
+  const isReasoningModel = selectedModelId === "chat-model-reasoning";
+  const [hasDisplayedReasoning, setHasDisplayedReasoning] = useState(false);
+  const latestAssistantMessage = [...messages]
+    .reverse()
+    .find((message) => message.role === "assistant");
+  const hasReasoningStarted =
+    latestAssistantMessage?.parts?.some(
+      (part) =>
+        part.type === "reasoning" &&
+        typeof part.text === "string" &&
+        part.text.trim().length > 0
+    ) ?? false;
+
+  useEffect(() => {
+    if (!isReasoningModel) {
+      setHasDisplayedReasoning(false);
+      return;
+    }
+
+    if (hasReasoningStarted) {
+      setHasDisplayedReasoning(true);
+    }
+  }, [hasReasoningStarted, isReasoningModel]);
+
+  useEffect(() => {
+    if (!isReasoningModel) {
+      setHasDisplayedReasoning(false);
+      return;
+    }
+
+    if (status === "submitted") {
+      setHasDisplayedReasoning(false);
+    }
+  }, [status, isReasoningModel]);
+
+  const shouldShowThinkingIndicator =
+    isReasoningModel &&
+    !hasDisplayedReasoning &&
+    (status === "submitted" || status === "streaming");
 
   useEffect(() => {
     if (status === "submitted") {
@@ -92,7 +132,9 @@ function PureMessages({
           ))}
 
           <AnimatePresence mode="wait">
-            {status === "submitted" && <ThinkingMessage key="thinking" />}
+            {shouldShowThinkingIndicator && (
+              <ThinkingMessage key="thinking" />
+            )}
           </AnimatePresence>
 
           <div
