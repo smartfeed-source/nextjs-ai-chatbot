@@ -176,33 +176,11 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
-        const modelMessages = convertToModelMessages(uiMessages);
-        const sanitizedMessages: CoreMessage[] = modelMessages.map((message) => {
-          if (
-            (message.role === "user" ||
-              message.role === "assistant" ||
-              message.role === "system") &&
-            Array.isArray(message.content)
-          ) {
-            const isAllText = message.content.every(
-              (part) => part.type === "text"
-            );
-            if (isAllText) {
-              return {
-                ...message,
-                content: message.content
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join(""),
-              };
-            }
-          }
-          return message;
-        }) as CoreMessage[];
-
+        // REVERTED: Removed manual sanitization logic
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: sanitizedMessages,
+          messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
             selectedChatModel === "chat-model-reasoning"
