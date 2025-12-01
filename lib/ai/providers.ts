@@ -14,13 +14,13 @@ const createProdProvider = () => {
 
   return customProvider({
     languageModels: {
-      "chat-model": openrouter("google/gemini-3.0-pro"),
+      "chat-model": openrouter("google/gemini-3-pro-preview"),
       "chat-model-reasoning": wrapLanguageModel({
         model: openrouter("openai/gpt-5.1-thinking"),
         middleware: extractReasoningMiddleware({ tagName: "think" }),
       }),
-      "title-model": openrouter("google/gemini-3.0-pro"),
-      "artifact-model": openrouter("google/gemini-3.0-pro"),
+      "title-model": openrouter("google/gemini-3-pro-preview"),
+      "artifact-model": openrouter("google/gemini-3-pro-preview"),
     },
   });
 };
