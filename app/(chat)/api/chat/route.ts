@@ -317,7 +317,7 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
+  const session = await getQrSession();
 
   if (!session?.user) {
     return new ChatSDKError("unauthorized:chat").toResponse();
