@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getQrStatus, initQrToken } from "@/lib/qr-store";
 import { generateUUID } from "@/lib/utils";
+import { QR_AUTH_COOKIE } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -25,6 +26,15 @@ export async function GET(request: Request) {
       httpOnly: false,
       sameSite: "lax",
       path: "/",
+    });
+  }
+
+  if (status === "login") {
+    response.cookies.set(QR_AUTH_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
     });
   }
 

@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-
 export function QrGate({ autoRedirect = true }: { autoRedirect?: boolean }) {
-  const router = useRouter();
   const [status, setStatus] = useState<"pending" | "login">("pending");
   const pollingRef = useRef<number | null>(null);
 
@@ -22,10 +18,6 @@ export function QrGate({ autoRedirect = true }: { autoRedirect?: boolean }) {
           if (pollingRef.current) window.clearInterval(pollingRef.current);
           pollingRef.current = null;
           if (autoRedirect) {
-            // Establish a guest session silently to enable API access, then reload
-            try {
-              await signIn("guest", { redirect: false });
-            } catch {}
             window.location.reload();
           }
           return;
@@ -44,7 +36,7 @@ export function QrGate({ autoRedirect = true }: { autoRedirect?: boolean }) {
       if (pollingRef.current) window.clearInterval(pollingRef.current);
       pollingRef.current = null;
     };
-  }, [autoRedirect, router]);
+  }, [autoRedirect]);
 
   useEffect(() => {
     // Try to auto-open the QR popup once on mount

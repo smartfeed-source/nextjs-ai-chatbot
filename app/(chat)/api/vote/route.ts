@@ -1,6 +1,6 @@
-import { auth } from "@/app/(auth)/auth";
 import { getChatById, getVotesByChatId, voteMessage } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
+import { getQrSession } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const session = await getQrSession();
 
   if (!session?.user) {
     return new ChatSDKError("unauthorized:vote").toResponse();
@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const session = await getQrSession();
 
   if (!session?.user) {
     return new ChatSDKError("unauthorized:vote").toResponse();

@@ -1,5 +1,4 @@
 import { tool, type UIMessageStreamWriter } from "ai";
-import type { Session } from "next-auth";
 import { z } from "zod";
 import {
   artifactKinds,
@@ -7,9 +6,10 @@ import {
 } from "@/lib/artifacts/server";
 import type { ChatMessage } from "@/lib/types";
 import { generateUUID } from "@/lib/utils";
+import type { QrSession } from "@/lib/auth/session";
 
 type CreateDocumentProps = {
-  session: Session;
+  session: QrSession;
   dataStream: UIMessageStreamWriter<ChatMessage>;
 };
 

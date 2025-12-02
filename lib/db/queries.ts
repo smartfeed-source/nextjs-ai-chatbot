@@ -53,6 +53,53 @@ export async function getUser(email: string): Promise<User[]> {
   }
 }
 
+export async function getUserById(id: string): Promise<User | null> {
+  try {
+    const [existingUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+
+    return existingUser ?? null;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to get user by id");
+  }
+}
+
+export async function ensureGuestUser({
+  id,
+  email,
+}: {
+  id: string;
+  email?: string;
+}) {
+  const existingUser = await getUserById(id);
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const fallbackEmail = email ?? `guest-${id}@qr.local`;
+
+  try {
+    const [newUser] = await db
+      .insert(user)
+      .values({
+        id,
+        email: fallbackEmail,
+      })
+      .returning();
+
+    return newUser;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to ensure guest user"
+    );
+  }
+}
+
 export async function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 

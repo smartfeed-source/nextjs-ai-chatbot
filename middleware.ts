@@ -1,6 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getQrStatus } from "./lib/qr-store";
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -18,12 +16,6 @@ export async function middleware(request: NextRequest) {
 
   // Allow QR login flow without forcing guest auth redirects
   if (["/login", "/register"].includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  // If a QR token cookie exists and is logged in, allow; otherwise pass through
-  const userToken = request.cookies.get("user_token")?.value;
-  if (userToken && getQrStatus(userToken) === "login") {
     return NextResponse.next();
   }
 

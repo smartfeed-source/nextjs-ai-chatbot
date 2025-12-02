@@ -1,14 +1,12 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
-import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
-import { QrGate } from "@/components/qr-gate";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { getQrSession } from "@/lib/auth/session";
 import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
-import { getQrStatus } from "@/lib/qr-store";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -20,21 +18,14 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   }
 
   const cookieStore = await cookies();
-  const token = cookieStore.get("user_token")?.value;
-  const isQrLoggedIn = token && getQrStatus(token) === "login";
-  if (!isQrLoggedIn) {
+  const session = await getQrSession();
+
+  if (!session?.user) {
     redirect(`/qr?redirect=${encodeURIComponent(`/chat/${id}`)}`);
   }
 
-  // Avoid forcing a guest session redirect; continue without session
-  const session = await auth();
-
   if (chat.visibility === "private") {
-    const sessionUserId = session?.user?.id;
-    if (!sessionUserId) {
-      return notFound();
-    }
-
+    const sessionUserId = session.user.id;
     if (sessionUserId !== chat.userId) {
       return notFound();
     }
@@ -51,7 +42,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   if (!chatModelFromCookie) {
     return (
       <>
-        {!isQrLoggedIn && <QrGate />}
         <Chat
           autoResume={true}
           id={chat.id}
@@ -68,7 +58,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      {!isQrLoggedIn && <QrGate />}
       <Chat
         autoResume={true}
         id={chat.id}

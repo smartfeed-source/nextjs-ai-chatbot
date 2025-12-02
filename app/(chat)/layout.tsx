@@ -3,8 +3,7 @@ import Script from "next/script";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getQrStatus } from "@/lib/qr-store";
-import { auth } from "../(auth)/auth";
+import { getQrSession } from "@/lib/auth/session";
 
 export const experimental_ppr = true;
 
@@ -13,11 +12,9 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  const [session, cookieStore] = await Promise.all([getQrSession(), cookies()]);
   const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
-  // Hide destructive actions when not logged in via QR or session
-  const token = cookieStore.get("user_token")?.value;
-  const isQrLoggedIn = token && getQrStatus(token) === "login";
+  const isQrLoggedIn = Boolean(session?.user);
 
   return (
     <>
@@ -27,7 +24,7 @@ export default async function Layout({
       />
       <DataStreamProvider>
         <SidebarProvider defaultOpen={!isCollapsed}>
-          <AppSidebar user={isQrLoggedIn ? (session?.user as any) : undefined} />
+          <AppSidebar user={isQrLoggedIn ? session?.user : undefined} />
           <SidebarInset>{children}</SidebarInset>
         </SidebarProvider>
       </DataStreamProvider>

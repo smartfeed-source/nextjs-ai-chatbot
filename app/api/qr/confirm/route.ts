@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { setQrLogin, getQrStatus } from "@/lib/qr-store";
+import { ensureGuestUser } from "@/lib/db/queries";
 
 export async function POST(request: Request) {
   try {
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await ensureGuestUser({ id: token });
     setQrLogin(token);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch {
