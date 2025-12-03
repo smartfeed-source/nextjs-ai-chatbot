@@ -50,6 +50,19 @@ const PurePreviewMessage = ({
     (part) => part.type === "file"
   );
 
+  const hasVisibleContent = message.parts?.some((part) => {
+    if (part.type === "text") {
+      return Boolean(part.text?.trim());
+    }
+    if (part.type === "reasoning") {
+      return Boolean(part.text?.trim());
+    }
+    return true;
+  });
+
+  const shouldShowThinkingPlaceholder =
+    message.role === "assistant" && isLoading && !hasVisibleContent;
+
   useDataStream();
 
   return (
@@ -104,6 +117,10 @@ const PurePreviewMessage = ({
                 />
               ))}
             </div>
+          )}
+
+          {shouldShowThinkingPlaceholder && (
+            <div className="text-muted-foreground text-sm">Thinking...</div>
           )}
 
           {message.parts?.map((part, index) => {
