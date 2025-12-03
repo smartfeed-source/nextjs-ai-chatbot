@@ -251,15 +251,23 @@ export async function POST(request: Request) {
       generateId: generateUUID,
       onFinish: async ({ messages }) => {
         await saveMessages({
-          messages: messages.map((currentMessage) => ({
-            id: currentMessage.id,
-            role: currentMessage.role,
-            parts: currentMessage.parts,
-            createdAt: new Date(),
-            attachments: [],
-            chatId: id,
-            providerMetadata: currentMessage.providerMetadata,
-          })),
+          messages: messages.map((currentMessage) => {
+            // The currentMessage is of type UIMessage, which doesn't technically expose providerMetadata
+            // in the type definition from the 'ai' package, even though it might be present at runtime
+            // or we might want to capture it if it were.
+            // However, since the type error says it doesn't exist, we'll cast or check for it safely.
+            const anyMessage = currentMessage as any;
+            
+            return {
+              id: currentMessage.id,
+              role: currentMessage.role,
+              parts: currentMessage.parts,
+              createdAt: new Date(),
+              attachments: [],
+              chatId: id,
+              providerMetadata: anyMessage.providerMetadata || {},
+            };
+          }),
         });
 
         if (finalMergedUsage) {
