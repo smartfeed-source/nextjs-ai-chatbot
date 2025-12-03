@@ -45,8 +45,25 @@ function PureMessages({
 
   useDataStream();
 
-  const shouldShowThinkingIndicator =
-    status === "submitted" || status === "streaming";
+  const isStreaming = status === "streaming";
+  const isSubmitted = status === "submitted";
+
+  const latestMessage = messages[messages.length - 1];
+  const isStreamingResponse = isStreaming && latestMessage?.role === "assistant";
+
+  // Check if the streaming message has any visible content yet
+  const hasContent =
+    isStreamingResponse &&
+    latestMessage?.parts?.some(
+      (part) =>
+        (part.type === "text" && part.text.trim().length > 0) ||
+        (part.type === "reasoning" && part.text.trim().length > 0) ||
+        (part.type !== "text" && part.type !== "reasoning")
+    );
+
+  // Show Thinking if we are submitted (waiting for response)
+  // OR if we are streaming but have no content yet (waiting for first chunk)
+  const shouldShowThinkingIndicator = isSubmitted || (isStreaming && !hasContent);
 
   useEffect(() => {
     if (status === "submitted") {
