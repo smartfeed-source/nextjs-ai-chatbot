@@ -257,6 +257,7 @@ export async function POST(request: Request) {
             createdAt: new Date(),
             attachments: [],
             chatId: id,
+            providerMetadata: currentMessage.providerMetadata,
           })),
         });
 

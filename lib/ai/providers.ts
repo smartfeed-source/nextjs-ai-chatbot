@@ -99,6 +99,18 @@ const createProdProvider = () => {
             : "url" in input
               ? input.url
               : OPENROUTER_CHAT_COMPLETIONS_URL;
+
+      // Inject include_reasoning: true into the body for Gemini/OpenRouter compatibility
+      if (init?.body && typeof init.body === "string") {
+        try {
+          const parsedBody = JSON.parse(init.body);
+          parsedBody.include_reasoning = true;
+          init.body = JSON.stringify(parsedBody);
+        } catch (e) {
+          console.warn("[OpenRouter] Failed to inject include_reasoning:", e);
+        }
+      }
+
       try {
         console.log("[OpenRouter] Request URL:", url);
         if (init?.body && typeof init.body === "string") {
@@ -132,7 +144,10 @@ const createProdProvider = () => {
           const cloned = response.clone();
           console.error("[OpenRouter] Error response:", await cloned.text());
         } catch (cloneError) {
-          console.error("[OpenRouter] Failed to read error response:", cloneError);
+          console.error(
+            "[OpenRouter] Failed to read error response:",
+            cloneError
+          );
         }
       }
       return response;
@@ -141,7 +156,10 @@ const createProdProvider = () => {
 
   return customProvider({
     languageModels: {
-      "chat-model": createLoggedModel(openrouter, "google/gemini-3-pro-preview"),
+      "chat-model": createLoggedModel(
+        openrouter,
+        "google/gemini-3-pro-preview"
+      ),
       "chat-model-reasoning": wrapLanguageModel({
         model: createLoggedModel(openrouter, "openai/gpt-5.1"),
         middleware: extractReasoningMiddleware({ tagName: "think" }),
